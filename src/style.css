@@ -238,3 +238,23 @@ input[type="file"] {
   border-color: #646cff;
   outline: none;
 }
+
+.post-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.reading-time-tag {
+  font-size: 0.75rem;
+  background: #333;
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: #aaa;
+}
+
+.post-meta .reading-time {
+  font-weight: 500;
+  color: #646cff;
+}
