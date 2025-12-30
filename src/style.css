@@ -258,3 +258,29 @@ input[type="file"] {
   font-weight: 500;
   color: #646cff;
 }
+
+.list-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: sticky;
+  top: 0;
+  background: #242424;
+  padding: 1rem 0;
+  z-index: 10;
+}
+
+.search-wrapper {
+  flex-grow: 1;
+}
+
+.secondary-btn {
+  background-color: #333;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.secondary-btn:hover {
+  background-color: #444;
+}
