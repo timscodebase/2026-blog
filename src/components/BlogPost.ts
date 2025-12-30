@@ -1,6 +1,6 @@
 import { db } from "../db";
-import { updateMetaTags } from "../utils";
-import snarkdown from "snarkdown"; // Import the parser
+import { updateMetaTags, getReadingTime } from "../utils";
+import snarkdown from "snarkdown";
 
 export class BlogPost extends HTMLElement {
   async connectedCallback() {
@@ -14,10 +14,8 @@ export class BlogPost extends HTMLElement {
       return;
     }
 
+    // Update browser title and social meta tags
     updateMetaTags(post.title, post.content.substring(0, 150), post.image);
-
-    // Use snarkdown to convert content to HTML
-    const htmlContent = snarkdown(post.content);
 
     this.innerHTML = `
       <article class="post-page">
@@ -30,12 +28,13 @@ export class BlogPost extends HTMLElement {
         }
         
         <h1>${post.title}</h1>
-        <div class="post-meta">Published on ${new Date(
-          post.date
-        ).toLocaleDateString()}</div>
+        <div class="post-meta">
+          Published on ${new Date(post.date).toLocaleDateString()} • 
+          <span class="reading-time">${getReadingTime(post.content)}</span>
+        </div>
         
         <div class="post-body">
-          ${htmlContent}
+          ${snarkdown(post.content)}
         </div>
       </article>
     `;
