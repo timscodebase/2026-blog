@@ -4,7 +4,8 @@ export interface Post {
   id?: number;
   title: string;
   content: string;
-  image?: string; // Optional base64 image string
+  image?: string; // Optimized base64 image string
+  tags?: string[]; // Array of tags for filtering
   date: number;
 }
 
@@ -12,6 +13,7 @@ export const db = new Dexie("BlogDatabase") as Dexie & {
   posts: EntityTable<Post, "id">;
 };
 
-db.version(2).stores({
-  posts: "++id, title, date",
+// Increment to version 3 to support tags
+db.version(3).stores({
+  posts: "++id, title, date, *tags", // '*' makes tags a multi-entry index
 });
