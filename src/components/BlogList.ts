@@ -1,46 +1,38 @@
 import { db } from "../db";
 import { getReadingTime } from "../utils";
+import { Auth } from "../auth";
 
 export class BlogList extends HTMLElement {
-  private searchTerm: string = "";
-  private filterTag: string | null = null; // State for tag filtering
+  private searchTerm = "";
+  private filterTag: string | null = null;
 
   async connectedCallback() {
     this.render();
     window.addEventListener("post-added", () => this.render());
   }
 
-  // Feature #5: Data Export
-  private async exportData() {
+  async exportData() {
     const posts = await db.posts.toArray();
-    const dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(posts, null, 2));
-    const downloadAnchorNode = document.createElement("a");
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute(
-      "download",
-      `blog_backup_${new Date().toLocaleDateString()}.json`
-    );
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+    const blob = new Blob([JSON.stringify(posts, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async render() {
+    const user = Auth.getUser();
     let posts = await db.posts.orderBy("date").reverse().toArray();
 
-    // Combined search and tag filtering
     if (this.searchTerm || this.filterTag) {
-      posts = posts.filter((post) => {
+      posts = posts.filter((p) => {
         const matchesSearch =
-          !this.searchTerm ||
-          post.title.toLowerCase().includes(this.searchTerm) ||
-          post.content.toLowerCase().includes(this.searchTerm);
-
-        const matchesTag =
-          !this.filterTag || (post.tags && post.tags.includes(this.filterTag));
-
+          !this.searchTerm || p.title.toLowerCase().includes(this.searchTerm);
+        const matchesTag = !this.filterTag || p.tags?.includes(this.filterTag);
         return matchesSearch && matchesTag;
       });
     }
@@ -48,45 +40,40 @@ export class BlogList extends HTMLElement {
     this.innerHTML = `
       <div class="list-controls">
         <div class="search-wrapper">
-          <input type="text" id="search-input" placeholder="Search title or content..." value="${
+          <input type="text" id="search-input" placeholder="Search..." value="${
             this.searchTerm
-          }" />
+          }"/>
         </div>
-        <button id="export-btn" class="secondary-btn">Backup to JSON</button>
+        ${
+          user?.role === "admin"
+            ? '<button id="export-btn" class="secondary-btn">Backup</button>'
+            : ""
+        }
       </div>
-
       ${
         this.filterTag
-          ? `
-        <div class="filter-status">
-          Showing posts with tag: <strong>${this.filterTag}</strong>
-          <button id="clear-filter">Clear</button>
-        </div>
-      `
+          ? `<div class="filter-status">Tag: ${this.filterTag} <button id="clear-tag">X</button></div>`
           : ""
       }
-
       <div class="posts-container">
-        ${posts.length === 0 ? `<p>No matching posts found.</p>` : ""}
         ${posts
           .map(
             (post) => `
           <article class="post-card">
             <h3><a href="#/post/${post.id}">${post.title}</a></h3>
-            <div class="tag-list">
-              ${(post.tags || [])
-                .map(
-                  (tag) =>
-                    `<span class="tag-pill" data-tag="${tag}">${tag}</span>`
-                )
-                .join("")}
-            </div>
+            <div class="tag-list">${(post.tags || [])
+              .map((t) => `<span class="tag-pill" data-tag="${t}">${t}</span>`)
+              .join("")}</div>
             <p>${post.content.substring(0, 100)}...</p>
             <div class="post-item-meta">
-              <small>${new Date(post.date).toLocaleDateString()}</small>
-              <span class="reading-time-tag">${getReadingTime(
-                post.content
-              )}</span>
+              <small>${new Date(
+                post.date
+              ).toLocaleDateString()} • ${getReadingTime(post.content)}</small>
+              ${
+                user?.role === "admin"
+                  ? `<button class="delete-btn" data-id="${post.id}">Delete</button>`
+                  : ""
+              }
             </div>
           </article>
         `
@@ -95,7 +82,6 @@ export class BlogList extends HTMLElement {
       </div>
     `;
 
-    // Event Listeners
     this.querySelector("#search-input")?.addEventListener("input", (e) => {
       this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
       this.render();
@@ -104,18 +90,27 @@ export class BlogList extends HTMLElement {
     this.querySelector("#export-btn")?.addEventListener("click", () =>
       this.exportData()
     );
-    this.querySelector("#clear-filter")?.addEventListener("click", () => {
+    this.querySelector("#clear-tag")?.addEventListener("click", () => {
       this.filterTag = null;
       this.render();
     });
 
-    // Click on a tag to filter the list
-    this.querySelectorAll(".tag-pill").forEach((pill) => {
-      pill.addEventListener("click", (e) => {
-        this.filterTag = (e.target as HTMLElement).dataset.tag || null;
+    this.querySelectorAll(".tag-pill").forEach((p) =>
+      p.addEventListener("click", (e) => {
+        this.filterTag = (e.target as HTMLElement).dataset.tag!;
         this.render();
-      });
-    });
+      })
+    );
+
+    this.querySelectorAll(".delete-btn").forEach((b) =>
+      b.addEventListener("click", async (e) => {
+        const id = Number((e.target as HTMLElement).dataset.id);
+        if (confirm("Delete?")) {
+          await db.posts.delete(id);
+          this.render();
+        }
+      })
+    );
   }
 }
 customElements.define("blog-list", BlogList);
