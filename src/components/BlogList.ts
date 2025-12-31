@@ -31,7 +31,9 @@ export class BlogList extends HTMLElement {
     if (this.searchTerm || this.filterTag) {
       posts = posts.filter((p) => {
         const matchesSearch =
-          !this.searchTerm || p.title.toLowerCase().includes(this.searchTerm);
+          !this.searchTerm ||
+          p.title.toLowerCase().includes(this.searchTerm) ||
+          p.content.toLowerCase().includes(this.searchTerm);
         const matchesTag = !this.filterTag || p.tags?.includes(this.filterTag);
         return matchesSearch && matchesTag;
       });
@@ -40,30 +42,35 @@ export class BlogList extends HTMLElement {
     this.innerHTML = `
       <div class="list-controls">
         <div class="search-wrapper">
-          <input type="text" id="search-input" placeholder="Search..." value="${
+          <input type="text" id="search-input" placeholder="Search title or content..." value="${
             this.searchTerm
           }"/>
         </div>
         ${
           user?.role === "admin"
-            ? '<button id="export-btn" class="secondary-btn">Backup</button>'
+            ? '<button id="export-btn" class="secondary-btn">Backup to JSON</button>'
             : ""
         }
       </div>
       ${
         this.filterTag
-          ? `<div class="filter-status">Tag: ${this.filterTag} <button id="clear-tag">X</button></div>`
+          ? `<div class="filter-status">Showing Tag: <strong>${this.filterTag}</strong> <button id="clear-tag">Clear</button></div>`
           : ""
       }
       <div class="posts-container">
+        ${posts.length === 0 ? `<p>No posts found.</p>` : ""}
         ${posts
           .map(
             (post) => `
           <article class="post-card">
             <h3><a href="#/post/${post.id}">${post.title}</a></h3>
-            <div class="tag-list">${(post.tags || [])
-              .map((t) => `<span class="tag-pill" data-tag="${t}">${t}</span>`)
-              .join("")}</div>
+            <div class="tag-list">
+              ${(post.tags || [])
+                .map(
+                  (t) => `<span class="tag-pill" data-tag="${t}">${t}</span>`
+                )
+                .join("")}
+            </div>
             <p>${post.content.substring(0, 100)}...</p>
             <div class="post-item-meta">
               <small>${new Date(
@@ -82,6 +89,7 @@ export class BlogList extends HTMLElement {
       </div>
     `;
 
+    // Listeners
     this.querySelector("#search-input")?.addEventListener("input", (e) => {
       this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
       this.render();
@@ -104,8 +112,8 @@ export class BlogList extends HTMLElement {
 
     this.querySelectorAll(".delete-btn").forEach((b) =>
       b.addEventListener("click", async (e) => {
-        const id = Number((e.target as HTMLElement).dataset.id);
-        if (confirm("Delete?")) {
+        const id = Number((e.currentTarget as HTMLElement).dataset.id);
+        if (confirm("Delete this post?")) {
           await db.posts.delete(id);
           this.render();
         }

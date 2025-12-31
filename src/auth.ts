@@ -1,4 +1,4 @@
-import { db, User } from "./db";
+import { db, type User } from "./db";
 
 export const Auth = {
   async signup(username: string, role: User["role"]): Promise<User> {
@@ -25,7 +25,11 @@ export const Auth = {
   },
 
   getUser(): User | null {
-    const session = localStorage.getItem("blog_session");
-    return session ? JSON.parse(session) : null;
+    try {
+      const session = localStorage.getItem("blog_session");
+      return session ? JSON.parse(session) : null;
+    } catch {
+      return null;
+    }
   },
 };

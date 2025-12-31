@@ -19,19 +19,22 @@
 
 body {
   margin: 0;
-  font-family: system-ui;
+  font-family: system-ui, sans-serif;
   background: var(--bg-color);
   color: var(--text-main);
   display: flex;
   place-items: center;
   min-height: 100vh;
 }
+
 #app {
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--space-lg);
   text-align: center;
 }
+
 input,
 textarea,
 select {
@@ -43,6 +46,7 @@ select {
   color: inherit;
   border-radius: 4px;
 }
+
 .post-card {
   text-align: left;
   border: 1px solid var(--border-color);
@@ -50,6 +54,7 @@ select {
   margin: 1rem 0;
   border-radius: var(--radius-md);
 }
+
 .tag-pill {
   font-size: 0.7rem;
   background: rgba(100, 108, 255, 0.1);
@@ -59,6 +64,7 @@ select {
   cursor: pointer;
   margin-right: 5px;
 }
+
 .featured-image {
   width: 100%;
   max-height: 400px;
@@ -66,6 +72,7 @@ select {
   border-radius: 12px;
   margin-bottom: 2rem;
 }
+
 .auth-status {
   display: flex;
   justify-content: flex-end;
@@ -73,6 +80,7 @@ select {
   margin-bottom: 2rem;
   font-size: 0.8rem;
 }
+
 .list-controls {
   display: flex;
   gap: 1rem;
@@ -83,6 +91,15 @@ select {
   padding: 1rem 0;
   z-index: 10;
 }
+
 .search-wrapper {
   flex-grow: 1;
+}
+
+.filter-status {
+  text-align: left;
+  margin-bottom: 1rem;
+  padding: 8px;
+  background: var(--bg-card);
+  border-radius: 4px;
 }

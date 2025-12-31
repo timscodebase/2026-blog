@@ -19,10 +19,13 @@ function router() {
     el.setAttribute("post-id", id);
     app.appendChild(el);
   } else {
-    updateMetaTags("Local Blog", "No-framework local-first blog.");
+    updateMetaTags(
+      "Local-First Blog 2026",
+      "A framework-less blog built with Web Components and Dexie."
+    );
     app.innerHTML = `
       <user-auth></user-auth>
-      <h1>Local-First Blog 2026</h1>
+      <h1>Local-First Blog</h1>
       ${
         user && user.role !== "viewer" ? "<blog-editor></blog-editor><hr/>" : ""
       }
@@ -31,6 +34,10 @@ function router() {
   }
 }
 
+// Event Listeners
 window.addEventListener("hashchange", router);
-window.addEventListener("load", router);
 window.addEventListener("auth-changed", router);
+window.addEventListener("load", router);
+
+// CRITICAL FIX: Call router immediately to handle cases where 'load' already fired
+router();
